@@ -1,32 +1,30 @@
 @file:Suppress("DEPRECATION")
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
-import java.awt.Point
-import java.awt.Toolkit
-import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
+import view.card.CardDeck
+import view.card.CardDeckPosition
+import view.card.cardsPerColor
+import view.util.loadCursorIcon
 
 fun main() = application {
     Window(
@@ -42,6 +40,17 @@ fun main() = application {
 
 @Composable
 fun App() {
+    val randomTopDiscardColor by remember {
+        mutableStateOf(cardsPerColor.keys.random())
+    }
+    val topDiscard by remember {
+        mutableStateOf(randomTopDiscardColor + "/" + cardsPerColor[randomTopDiscardColor]?.random())
+    }
+
+    val rotation by remember {
+        mutableStateOf((-10..10).random().toFloat())
+    }
+
     MaterialTheme {
         Box(
             modifier = Modifier.fillMaxSize().background(Color(0xFF113540))
@@ -61,146 +70,47 @@ fun App() {
                 modifier = Modifier.fillMaxSize(0.65f)
             )
 
-            // Top
+            Image(
+                painter = painterResource("assets/Uno/individual/$topDiscard"),
+                contentDescription = "Top Discard",
+                modifier = Modifier.size(150.dp).align(Alignment.Center).graphicsLayer {
+                    rotationZ = rotation
+                })
+
             Box(
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 48.dp)
             ) {
-                CardDeck(
-                    listOf(
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png", "yellow/block_yellow.png",
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png",
-                    ), Position.TOP, hidden = true
-                )
+                CardDeck(generateRandomUnoHand(), CardDeckPosition.TOP, hidden = true)
             }
 
-            // Bottom
             Box(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp)
             ) {
-                CardDeck(
-                    listOf(
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png", "yellow/block_yellow.png",
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png",
-                    ), Position.BOTTOM
-                )
+                CardDeck(generateRandomUnoHand(), CardDeckPosition.BOTTOM)
             }
 
-            // Left
             Box(
                 modifier = Modifier.align(Alignment.CenterStart).padding(start = 48.dp)
             ) {
-                CardDeck(
-                    listOf(
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png", "yellow/block_yellow.png",
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png",
-                    ), Position.LEFT, hidden = true
-                )
+                CardDeck(generateRandomUnoHand(), CardDeckPosition.LEFT, hidden = true)
             }
 
-            // Right
             Box(
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 48.dp)
             ) {
-                CardDeck(
-                    listOf(
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png", "yellow/block_yellow.png",
-                        "green/1_green.png", "blue/inverse_blue.png", "red/8_red.png",
-                    ), Position.RIGHT, hidden = true
-                )
+                CardDeck(generateRandomUnoHand(), CardDeckPosition.RIGHT, hidden = true)
             }
         }
     }
 }
 
-enum class Position {
-    LEFT, RIGHT, TOP, BOTTOM
-}
-
-@Composable
-fun CardDeck(cardList: List<String>, position: Position, hidden: Boolean = false) {
-    val isHorizontal = position == Position.TOP || position == Position.BOTTOM
-
-    val modifier = when (position) {
-        Position.TOP, Position.BOTTOM -> Modifier.fillMaxWidth().height(120.dp)
-        Position.LEFT, Position.RIGHT -> Modifier.fillMaxHeight().width(120.dp)
-    }
-
-    val alignment = when (position) {
-        Position.TOP -> Alignment.TopCenter
-        Position.BOTTOM -> Alignment.BottomCenter
-        Position.LEFT -> Alignment.CenterStart
-        Position.RIGHT -> Alignment.CenterEnd
-    }
-
-    Box(modifier = modifier, contentAlignment = alignment) {
-        if (isHorizontal) {
-            LazyRow {
-                items(cardList) { card ->
-                    CardImage(card, hidden, position)
-                    CardSpacer(position)
-                }
-            }
-        } else {
-            LazyColumn {
-                items(cardList) { card ->
-                    CardImage(card, hidden, position)
-                    CardSpacer(position)
-                }
-            }
+fun generateRandomUnoHand(): List<String> {
+    val allCards = mutableListOf<String>()
+    for ((color, cardList) in cardsPerColor) {
+        for (card in cardList) {
+            allCards.add("$color/$card")
         }
     }
-}
 
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-private fun CardImage(card: String, hidden: Boolean, position: Position) {
-    val imagePath = if (hidden) "assets/Uno/individual/card back/card_back.png"
-    else "assets/Uno/individual/${card}"
-
-    var isHovered by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        if (position == Position.BOTTOM && isHovered) 0.95f else 1f, label = "cardScale"
-    )
-
-    Image(
-        painter = painterResource(imagePath),
-        contentDescription = "Uno Card",
-        contentScale = if (isHovered) ContentScale.Inside else ContentScale.Fit,
-        modifier = Modifier.size(90.dp).aspectRatio(0.66f).graphicsLayer(
-            scaleX = scale, scaleY = scale
-        ).rotateCard(position).pointerHoverIcon(
-            if (position == Position.BOTTOM) loadCursorIcon("assets/Cursors/Hand.png") else loadCursorIcon("assets/Cursors/Default.png")
-        ).onPointerEvent(PointerEventType.Enter) {
-            if (position == Position.BOTTOM) isHovered = true
-        }.onPointerEvent(PointerEventType.Exit) {
-            isHovered = false
-        })
-}
-
-fun loadCursorIcon(resourcePath: String): PointerIcon {
-    val resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream(resourcePath)
-        ?: error("Resource not found: $resourcePath")
-
-    val bufferedImage: BufferedImage = ImageIO.read(resourceStream)
-    val toolkit = Toolkit.getDefaultToolkit()
-    val awtCursor = toolkit.createCustomCursor(bufferedImage, Point(0, 0), "customCursor")
-    return PointerIcon(awtCursor)
-}
-
-@Composable
-fun CardSpacer(position: Position) {
-    when (position) {
-        Position.TOP, Position.BOTTOM -> Spacer(modifier = Modifier.width(6.dp))
-        Position.LEFT, Position.RIGHT -> Spacer(modifier = Modifier.height(6.dp))
-    }
-}
-
-fun Modifier.rotateCard(position: Position): Modifier {
-    val rotationAngle = when (position) {
-        Position.LEFT -> 90f
-        Position.RIGHT -> -90f
-        Position.TOP -> 180f
-        Position.BOTTOM -> 0f
-    }
-    return this.graphicsLayer(rotationZ = rotationAngle)
+    return allCards.shuffled().take(7)
 }
