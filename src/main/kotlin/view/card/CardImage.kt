@@ -48,7 +48,7 @@ fun Modifier.rotateCard(cardDeckPosition: CardDeckPosition): Modifier {
     val rotationAngle = when (cardDeckPosition) {
         CardDeckPosition.LEFT -> 90f
         CardDeckPosition.RIGHT -> -90f
-        CardDeckPosition.TOP -> 180f
+        CardDeckPosition.TOP -> 0f
         CardDeckPosition.BOTTOM -> 0f
     }
     return this.graphicsLayer(rotationZ = rotationAngle)

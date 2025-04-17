@@ -1,116 +1,105 @@
-@file:Suppress("DEPRECATION")
-
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
-import view.card.CardDeck
-import view.card.CardDeckPosition
-import view.card.cardsPerColor
+import model.Player
+import model.TopDiscard
+import net.TcpViewModel
+import view.gameboard.GameBoard
+import view.menu.Menu
 import view.util.loadCursorIcon
+import kotlin.system.exitProcess
 
-fun main() = application {
+@Composable
+fun App(tcpViewModel: TcpViewModel = remember { TcpViewModel() }) {
+    val selection = remember { mutableStateOf("") }
+    var topDiscard by remember { mutableStateOf<TopDiscard?>(null) }
+    val players by remember { mutableStateOf(mutableStateListOf<Player?>(null, null, null, null)) }
+
+    LaunchedEffect(selection.value) {
+        if (selection.value == "START") {
+            topDiscard = TopDiscard.generateTopDiscard()
+            players[0] = Player(1)
+            tcpViewModel.startHosting()
+        }
+
+        if (selection.value.startsWith("JOIN")) {
+            val joinCode = selection.value.removePrefix("JOIN ")
+            tcpViewModel.connectToHost(joinCode)
+        }
+    }
+
+    LaunchedEffect(tcpViewModel.connectedClients.toList()) {
+        if (selection.value != "START") {
+            return@LaunchedEffect
+        }
+
+        val connectedClients = tcpViewModel.connectedClients
+        for ((i, player) in players.withIndex()) {
+            if (player == null) {
+                players[i] = connectedClients.lastIndex.let { lastIndex ->
+                    connectedClients[lastIndex]?.inetAddress?.hostAddress?.let {
+                        Player(id = i + 1, ip = it)
+                    }
+                }
+                break
+            }
+        }
+        tcpViewModel.broadcastTopDiscard(topDiscard)
+        tcpViewModel.broadcastPlayers(players)
+    }
+
+    LaunchedEffect(tcpViewModel.receivedTopDiscard.toList(), tcpViewModel.receivedPlayers.toList()) {
+        val receivedTopDiscard = tcpViewModel.receivedTopDiscard.toList().first()
+        val receivedPlayers = tcpViewModel.receivedPlayers.toList().filterNotNull()
+        if (!selection.value.startsWith("JOIN") || receivedTopDiscard == null || receivedPlayers.isEmpty()) {
+            return@LaunchedEffect
+        }
+
+        topDiscard = receivedTopDiscard
+
+        val currentIp = tcpViewModel.getIp()
+        val currentPlayer = receivedPlayers.find { it.ip == currentIp }
+        val otherPlayers = receivedPlayers.filter { it.ip != currentIp }.sortedBy { it.id }
+
+        players.clear()
+        if (currentPlayer != null) {
+            players.add(currentPlayer)
+        }
+        players.addAll(otherPlayers)
+
+        while (players.size < 4) {
+            players.add(null)
+        }
+    }
+
     Window(
-        onCloseRequest = ::exitApplication, title = "Card Games", state = rememberWindowState(
+        onCloseRequest = { exitProcess(0) }, title = "Card Games", state = rememberWindowState(
             position = WindowPosition.Aligned(Alignment.Center),
             size = DpSize(1920.dp, 1080.dp),
             placement = WindowPlacement.Maximized,
         ), resizable = false, undecorated = true
     ) {
-        App()
-    }
-}
-
-@Composable
-fun App() {
-    val randomTopDiscardColor by remember {
-        mutableStateOf(cardsPerColor.keys.random())
-    }
-    val topDiscard by remember {
-        mutableStateOf(randomTopDiscardColor + "/" + cardsPerColor[randomTopDiscardColor]?.random())
-    }
-
-    val rotation by remember {
-        mutableStateOf((-10..10).random().toFloat())
-    }
-
-    MaterialTheme {
-        Box(
-            modifier = Modifier.fillMaxSize().background(Color(0xFF113540))
-                .pointerHoverIcon(loadCursorIcon("assets/Cursors/Default.png")), contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource("assets/Backgrounds/background_2.png"),
-                contentDescription = "Background Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            Image(
-                painter = painterResource("assets/Tables/table_red.png"),
-                contentDescription = "Table Red",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize(0.65f)
-            )
-
-            Image(
-                painter = painterResource("assets/Uno/individual/$topDiscard"),
-                contentDescription = "Top Discard",
-                modifier = Modifier.size(150.dp).align(Alignment.Center).graphicsLayer {
-                    rotationZ = rotation
-                })
-
+        MaterialTheme {
             Box(
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 48.dp)
+                modifier = Modifier.fillMaxSize().background(Color(0xFF113540))
+                    .pointerHoverIcon(loadCursorIcon("assets/Cursors/Default.png")), contentAlignment = Alignment.Center
             ) {
-                CardDeck(generateRandomUnoHand(), CardDeckPosition.TOP, hidden = true)
-            }
-
-            Box(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp)
-            ) {
-                CardDeck(generateRandomUnoHand(), CardDeckPosition.BOTTOM)
-            }
-
-            Box(
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 48.dp)
-            ) {
-                CardDeck(generateRandomUnoHand(), CardDeckPosition.LEFT, hidden = true)
-            }
-
-            Box(
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 48.dp)
-            ) {
-                CardDeck(generateRandomUnoHand(), CardDeckPosition.RIGHT, hidden = true)
+                Menu(selection)
+                topDiscard?.let { GameBoard(players, it) }
             }
         }
     }
 }
 
-fun generateRandomUnoHand(): List<String> {
-    val allCards = mutableListOf<String>()
-    for ((color, cardList) in cardsPerColor) {
-        for (card in cardList) {
-            allCards.add("$color/$card")
-        }
-    }
-
-    return allCards.shuffled().take(7)
+fun main() = application {
+    App()
 }
