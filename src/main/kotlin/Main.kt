@@ -26,7 +26,7 @@ fun App(tcpViewModel: TcpViewModel = remember { TcpViewModel() }) {
 
     LaunchedEffect(selection.value) {
         if (selection.value == "START") {
-            topDiscard = TopDiscard.generateTopDiscard()
+            topDiscard = TopDiscard.takeTopDiscard()
             players[0] = Player(1)
             tcpViewModel.startHosting()
         }

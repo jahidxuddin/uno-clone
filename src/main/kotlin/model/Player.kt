@@ -1,19 +1,17 @@
 package model
 
-import view.card.cardsPerColor
+import view.card.UNO_DECK
 
 data class Player(
-    val id: Int, val ip: String = "localhost", val hand: List<String> = generateRandomHand()
+    val id: Int, val ip: String = "localhost", val hand: List<String> = takeCards()
 ) {
     companion object {
-        private fun generateRandomHand(): List<String> {
-            val allCards = mutableListOf<String>()
-            for ((color, cardList) in cardsPerColor) {
-                for (card in cardList) {
-                    allCards.add("$color/$card")
-                }
+        private fun takeCards(): List<String> {
+            val cards = mutableListOf<String>()
+            repeat(7) {
+                cards.add(UNO_DECK.removeFirst())
             }
-            return allCards.shuffled().take(7)
+            return cards
         }
     }
 }

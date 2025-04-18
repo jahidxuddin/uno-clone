@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CardDeck(cardList: List<String>, cardDeckPosition: CardDeckPosition, hidden: Boolean = false) {
+fun PlayerDeck(cardList: List<String>, cardDeckPosition: CardDeckPosition, hidden: Boolean = false) {
     val isHorizontal = cardDeckPosition == CardDeckPosition.TOP || cardDeckPosition == CardDeckPosition.BOTTOM
 
     val modifier = when (cardDeckPosition) {
