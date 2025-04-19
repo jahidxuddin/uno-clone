@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package view.gameboard
+package presentation.gameboard
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -16,8 +16,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import model.Player
 import model.TopDiscard
-import view.card.PlayerDeck
-import view.card.CardDeckPosition
+import presentation.components.card.PlayerDeck
+import presentation.components.card.CardDeckPosition
 
 @Composable
 fun GameBoard(players: List<Player?>, topDiscard: TopDiscard) {
@@ -47,7 +47,7 @@ fun GameBoard(players: List<Player?>, topDiscard: TopDiscard) {
             Box(
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 48.dp)
             ) {
-                PlayerDeck(players[1]!!.hand, CardDeckPosition.TOP, hidden = true)
+                PlayerDeck(players[1]!!, CardDeckPosition.TOP, hidden = true)
             }
         }
 
@@ -55,7 +55,7 @@ fun GameBoard(players: List<Player?>, topDiscard: TopDiscard) {
             Box(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp)
             ) {
-                PlayerDeck(players[0]!!.hand, CardDeckPosition.BOTTOM)
+                PlayerDeck(players[0]!!, CardDeckPosition.BOTTOM)
             }
         }
 
@@ -63,7 +63,7 @@ fun GameBoard(players: List<Player?>, topDiscard: TopDiscard) {
             Box(
                 modifier = Modifier.align(Alignment.CenterStart).padding(start = 48.dp)
             ) {
-                PlayerDeck(players[2]!!.hand, CardDeckPosition.LEFT, hidden = true)
+                PlayerDeck(players[2]!!, CardDeckPosition.LEFT, hidden = true)
             }
         }
 
@@ -71,7 +71,7 @@ fun GameBoard(players: List<Player?>, topDiscard: TopDiscard) {
             Box(
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 48.dp)
             ) {
-                PlayerDeck(players[3]!!.hand, CardDeckPosition.RIGHT, hidden = true)
+                PlayerDeck(players[3]!!, CardDeckPosition.RIGHT, hidden = true)
             }
         }
     }

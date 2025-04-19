@@ -1,6 +1,6 @@
 package model
 
-import view.card.UNO_DECK
+import presentation.components.card.UNO_DECK
 
 data class TopDiscard(val imagePath: String, val rotation: Float) {
     companion object {

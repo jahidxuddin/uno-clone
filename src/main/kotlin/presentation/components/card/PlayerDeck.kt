@@ -1,4 +1,4 @@
-package view.card
+package presentation.components.card
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,9 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import model.Player
 
 @Composable
-fun PlayerDeck(cardList: List<String>, cardDeckPosition: CardDeckPosition, hidden: Boolean = false) {
+fun PlayerDeck(player: Player, cardDeckPosition: CardDeckPosition, hidden: Boolean = false) {
     val isHorizontal = cardDeckPosition == CardDeckPosition.TOP || cardDeckPosition == CardDeckPosition.BOTTOM
 
     val modifier = when (cardDeckPosition) {
@@ -28,15 +29,19 @@ fun PlayerDeck(cardList: List<String>, cardDeckPosition: CardDeckPosition, hidde
     Box(modifier = modifier, contentAlignment = alignment) {
         if (isHorizontal) {
             LazyRow {
-                items(cardList) { card ->
-                    CardImage(card, hidden, cardDeckPosition)
+                items(player.hand) { card ->
+                    CardImage(card, hidden, cardDeckPosition) {
+                        player.removeCard(card)
+                    }
                     CardSpacer(cardDeckPosition)
                 }
             }
         } else {
             LazyColumn {
-                items(cardList) { card ->
-                    CardImage(card, hidden, cardDeckPosition)
+                items(player.hand) { card ->
+                    CardImage(card, hidden, cardDeckPosition) {
+                        player.removeCard(card)
+                    }
                     CardSpacer(cardDeckPosition)
                 }
             }

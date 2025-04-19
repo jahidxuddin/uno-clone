@@ -1,9 +1,10 @@
 @file:Suppress("DEPRECATION")
 
-package view.card
+package presentation.components.card
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
@@ -16,11 +17,11 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import view.util.loadCursorIcon
+import util.loadCursorIcon
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun CardImage(card: String, hidden: Boolean, cardDeckPosition: CardDeckPosition) {
+fun CardImage(card: String, hidden: Boolean, cardDeckPosition: CardDeckPosition, onClick: () -> Unit = {}) {
     val imagePath = if (hidden) "assets/Uno/individual/card back/card_back.png"
     else "assets/Uno/individual/${card}"
 
@@ -33,7 +34,7 @@ fun CardImage(card: String, hidden: Boolean, cardDeckPosition: CardDeckPosition)
         painter = painterResource(imagePath),
         contentDescription = "Uno Card",
         contentScale = if (isHovered) ContentScale.Inside else ContentScale.Fit,
-        modifier = Modifier.size(90.dp).aspectRatio(0.66f).graphicsLayer(
+        modifier = Modifier.clickable(onClick = onClick).size(90.dp).aspectRatio(0.66f).graphicsLayer(
             scaleX = scale, scaleY = scale
         ).rotateCard(cardDeckPosition).pointerHoverIcon(
             if (cardDeckPosition == CardDeckPosition.BOTTOM) loadCursorIcon("assets/Cursors/Hand.png") else loadCursorIcon("assets/Cursors/Default.png")

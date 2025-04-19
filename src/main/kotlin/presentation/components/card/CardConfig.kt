@@ -1,4 +1,4 @@
-package view.card
+package presentation.components.card
 
 val UNO_DECK = ArrayDeque<String>().apply {
     val allCards = buildList {

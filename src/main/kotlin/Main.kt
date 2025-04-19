@@ -13,68 +13,62 @@ import androidx.compose.ui.window.*
 import model.Player
 import model.TopDiscard
 import net.TcpViewModel
-import view.gameboard.GameBoard
-import view.menu.Menu
-import view.util.loadCursorIcon
+import presentation.gameboard.GameBoard
+import presentation.menu.Menu
+import util.loadCursorIcon
 import kotlin.system.exitProcess
 
 @Composable
 fun App(tcpViewModel: TcpViewModel = remember { TcpViewModel() }) {
     val selection = remember { mutableStateOf("") }
     var topDiscard by remember { mutableStateOf<TopDiscard?>(null) }
-    val players by remember { mutableStateOf(mutableStateListOf<Player?>(null, null, null, null)) }
+    val players = remember { mutableStateListOf<Player?>(null, null, null, null) }
 
     LaunchedEffect(selection.value) {
-        if (selection.value == "START") {
-            topDiscard = TopDiscard.takeTopDiscard()
-            players[0] = Player(1)
-            tcpViewModel.startHosting()
-        }
+        when {
+            selection.value == "START" -> {
+                topDiscard = TopDiscard.takeTopDiscard()
+                players[0] = Player(1)
+                tcpViewModel.startHosting()
+            }
 
-        if (selection.value.startsWith("JOIN")) {
-            val joinCode = selection.value.removePrefix("JOIN ")
-            tcpViewModel.connectToHost(joinCode)
+            selection.value.startsWith("JOIN") -> {
+                val joinCode = selection.value.removePrefix("JOIN ")
+                tcpViewModel.connectToHost(joinCode)
+            }
         }
     }
 
     LaunchedEffect(tcpViewModel.connectedClients.toList()) {
-        if (selection.value != "START") {
-            return@LaunchedEffect
-        }
+        if (selection.value != "START") return@LaunchedEffect
 
-        val connectedClients = tcpViewModel.connectedClients
-        for ((i, player) in players.withIndex()) {
-            if (player == null) {
-                players[i] = connectedClients.lastIndex.let { lastIndex ->
-                    connectedClients[lastIndex]?.inetAddress?.hostAddress?.let {
-                        Player(id = i + 1, ip = it)
-                    }
-                }
-                break
+        val connectedClients = tcpViewModel.connectedClients.toList()
+        val emptySlotIndex = players.indexOfFirst { it == null }
+
+        if (emptySlotIndex != -1) {
+            connectedClients.lastOrNull()?.inetAddress?.hostAddress?.let { ip ->
+                players[emptySlotIndex] = Player(id = emptySlotIndex + 1, ip = ip)
             }
         }
+
         tcpViewModel.broadcastTopDiscard(topDiscard)
-        tcpViewModel.broadcastPlayers(players)
+        tcpViewModel.broadcastPlayers(players.toList())
     }
 
     LaunchedEffect(tcpViewModel.receivedTopDiscard.toList(), tcpViewModel.receivedPlayers.toList()) {
-        val receivedTopDiscard = tcpViewModel.receivedTopDiscard.toList().first()
-        val receivedPlayers = tcpViewModel.receivedPlayers.toList().filterNotNull()
+        val receivedTopDiscard = tcpViewModel.receivedTopDiscard.firstOrNull()
+        val receivedPlayers = tcpViewModel.receivedPlayers.filterNotNull()
+
         if (!selection.value.startsWith("JOIN") || receivedTopDiscard == null || receivedPlayers.isEmpty()) {
             return@LaunchedEffect
         }
 
         topDiscard = receivedTopDiscard
-
         val currentIp = tcpViewModel.getIp()
-        val currentPlayer = receivedPlayers.find { it.ip == currentIp }
-        val otherPlayers = receivedPlayers.filter { it.ip != currentIp }.sortedBy { it.id }
 
         players.clear()
-        if (currentPlayer != null) {
-            players.add(currentPlayer)
-        }
-        players.addAll(otherPlayers)
+        val sortedPlayers = receivedPlayers.sortedWith(compareBy<Player> { it.ip != currentIp }.thenBy { it.id })
+        players.addAll(sortedPlayers)
 
         while (players.size < 4) {
             players.add(null)

@@ -1,4 +1,4 @@
-package view.menu
+package presentation.menu
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*

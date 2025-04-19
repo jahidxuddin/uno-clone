@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import model.Player
 import model.TopDiscard
+import model.toDTO
 import java.net.Socket
 
 class TcpViewModel {
@@ -45,8 +46,11 @@ class TcpViewModel {
     }
 
     fun broadcastPlayers(players: List<Player?>) {
-        server?.broadcastMessage("PLAYERS:${gson.toJson(players)}")
+        val playersDTO = players.map { it?.toDTO() }
+        val json = gson.toJson(playersDTO)
+        server?.broadcastMessage("PLAYERS:$json")
     }
+
 
     fun getIp(): String? {
         if (server != null) {
