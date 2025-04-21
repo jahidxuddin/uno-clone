@@ -2,14 +2,15 @@ package presentation
 
 import androidx.compose.runtime.*
 import model.Player
-import model.TopDiscard
+import model.Card
 import net.TcpViewModel
 
 class AppState(
     private val tcpViewModel: TcpViewModel
 ) {
     var selection by mutableStateOf("")
-    var topDiscard by mutableStateOf<TopDiscard?>(null)
+
+    val discardPile = mutableStateOf(ArrayDeque<Card>())
     var players = mutableStateListOf<Player?>(null, null, null, null)
 
     fun handleSelection() {
@@ -20,7 +21,9 @@ class AppState(
     }
 
     private fun handleGameStart() {
-        topDiscard = TopDiscard.takeTopDiscard()
+        Card.takeTopDiscard().let {
+            discardPile.value.addLast(it)
+        }
         players[0] = Player(1)
         tcpViewModel.startHosting()
     }
@@ -36,13 +39,14 @@ class AppState(
         val connectedClients = tcpViewModel.connectedClients.toList()
         val emptySlotIndex = players.indexOfFirst { it == null }
 
+        // Add new player
         if (emptySlotIndex != -1) {
             connectedClients.lastOrNull()?.inetAddress?.hostAddress?.let { ip ->
                 players[emptySlotIndex] = Player(id = emptySlotIndex + 1, ip = ip)
             }
         }
 
-        tcpViewModel.broadcastTopDiscard(topDiscard)
+        tcpViewModel.broadcastTopDiscard(discardPile.value.lastOrNull())
         tcpViewModel.broadcastPlayers(players.toList())
     }
 
@@ -54,15 +58,23 @@ class AppState(
             return
         }
 
-        topDiscard = receivedTopDiscard
-        val currentIp = tcpViewModel.getIp()
-
+        // Update discard pile
+        if (discardPile.value.isEmpty() || discardPile.value.last() != receivedTopDiscard) {
+            discardPile.value.addLast(receivedTopDiscard)
+        }
+        // Update players
+        val sortedPlayers = receivedPlayers.sortedWith(compareBy<Player> { it.ip != tcpViewModel.getIp() }.thenBy { it.id })
         players.clear()
-        val sortedPlayers = receivedPlayers.sortedWith(compareBy<Player> { it.ip != currentIp }.thenBy { it.id })
         players.addAll(sortedPlayers)
-
         while (players.size < 4) {
             players.add(null)
         }
+    }
+
+    fun addCardToDiscardPile(card: Card) {
+        val newDeque = ArrayDeque(discardPile.value)
+        newDeque.addLast(card)
+        discardPile.value = newDeque
+        // TODO: Broadcast the updated discard pile to all clients
     }
 }

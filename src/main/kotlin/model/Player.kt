@@ -6,9 +6,7 @@ import androidx.compose.runtime.setValue
 import presentation.components.card.UNO_DECK
 
 data class Player(
-    val id: Int,
-    val ip: String = "localhost",
-    private val initialHand: List<String>? = takeCards()
+    val id: Int, val ip: String = "localhost", private val initialHand: List<String>? = takeCards()
 ) {
     private var _hand by mutableStateOf(initialHand)
     var hand: List<String>
@@ -35,7 +33,5 @@ data class Player(
 }
 
 fun Player.toDTO() = PlayerDTO(
-    id = id,
-    ip = ip,
-    hand = hand
+    id = id, ip = ip, hand = hand
 )

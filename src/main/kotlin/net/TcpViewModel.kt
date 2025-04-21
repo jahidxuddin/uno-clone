@@ -5,8 +5,8 @@ import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import model.Card
 import model.Player
-import model.TopDiscard
 import model.toDTO
 import java.net.Socket
 
@@ -15,7 +15,7 @@ class TcpViewModel {
     private var client: TcpClient? = null
     private var server: TcpServer? = null
 
-    var receivedTopDiscard = mutableStateListOf<TopDiscard?>(null)
+    var receivedTopDiscard = mutableStateListOf<Card?>(null)
     var connectedClients = mutableStateListOf<Socket?>(null, null, null, null)
     var receivedPlayers = mutableStateListOf<Player?>(null, null, null, null)
 
@@ -41,7 +41,7 @@ class TcpViewModel {
         }
     }
 
-    fun broadcastTopDiscard(topDiscard: TopDiscard?) {
+    fun broadcastTopDiscard(topDiscard: Card?) {
         server?.broadcastMessage("TOP DISCARD:${gson.toJson(topDiscard)}")
     }
 

@@ -7,9 +7,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import model.Card
 import model.Player
 import model.PlayerDTO
-import model.TopDiscard
 import model.toPlayer
 import java.io.BufferedReader
 import java.io.IOException
@@ -19,7 +19,7 @@ import java.net.Socket
 class TcpClient(
     private val host: String,
     private val port: Int,
-    var receivedTopDiscard: SnapshotStateList<TopDiscard?>,
+    var receivedTopDiscard: SnapshotStateList<Card?>,
     val receivedPlayers: SnapshotStateList<Player?>
 ) {
     private val gson = Gson()
@@ -39,8 +39,8 @@ class TcpClient(
                     when {
                         message.startsWith("TOP DISCARD:") -> {
                             val jsonPart = message.removePrefix("TOP DISCARD:")
-                            val type = object : TypeToken<TopDiscard?>() {}.type
-                            val topDiscard: TopDiscard? = gson.fromJson(jsonPart, type)
+                            val type = object : TypeToken<Card?>() {}.type
+                            val topDiscard: Card? = gson.fromJson(jsonPart, type)
                             withContext(Dispatchers.Main) {
                                 receivedTopDiscard.clear()
                                 receivedTopDiscard.add(topDiscard)

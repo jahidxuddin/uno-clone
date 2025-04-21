@@ -1,13 +1,9 @@
 package model
 
 data class PlayerDTO(
-    val id: Int,
-    val ip: String,
-    val hand: List<String>
+    val id: Int, val ip: String, val hand: List<String>
 )
 
 fun PlayerDTO.toPlayer() = Player(
-    id = id,
-    ip = ip,
-    initialHand = hand
+    id = id, ip = ip, initialHand = hand
 )

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +20,7 @@ import androidx.compose.ui.window.rememberWindowState
 import net.TcpViewModel
 import presentation.gameboard.GameBoard
 import presentation.menu.Menu
+import util.bindState
 import util.loadCursorIcon
 import kotlin.system.exitProcess
 
@@ -40,41 +40,28 @@ fun App(tcpViewModel: TcpViewModel = remember { TcpViewModel() }) {
         appState.updateReceivedData()
     }
 
+    val windowState = rememberWindowState(
+        position = WindowPosition.Aligned(Alignment.Center),
+        size = DpSize(1920.dp, 1080.dp),
+        placement = WindowPlacement.Maximized,
+    )
+
     Window(
         onCloseRequest = { exitProcess(0) },
-        title = "Card Games",
-        state = rememberWindowState(
-            position = WindowPosition.Aligned(Alignment.Center),
-            size = DpSize(1920.dp, 1080.dp),
-            placement = WindowPlacement.Maximized,
-        ),
+        title = "UNO",
+        state = windowState,
         resizable = false,
         undecorated = true
     ) {
         MaterialTheme {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF113540))
-                    .pointerHoverIcon(loadCursorIcon("assets/Cursors/Default.png")),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.fillMaxSize().background(Color(0xFF113540))
+                    .pointerHoverIcon(loadCursorIcon("assets/Cursors/Default.png")), contentAlignment = Alignment.Center
             ) {
-                Menu(
-                    selection = object : MutableState<String> {
-                        override var value: String
-                            get() = appState.selection
-                            set(value) { appState.selection = value }
-
-                        override fun component1(): String {
-                            TODO("Not yet implemented")
-                        }
-
-                        override fun component2(): (String) -> Unit {
-                            TODO("Not yet implemented")
-                        }
-                    }
-                )
-                appState.topDiscard?.let { GameBoard(appState.players, it) }
+                Menu(bindState({ appState.selection }, { appState.selection = it }))
+                GameBoard(appState.players, appState.discardPile.value) { card ->
+                    appState.addCardToDiscardPile(card)
+                }
             }
         }
     }

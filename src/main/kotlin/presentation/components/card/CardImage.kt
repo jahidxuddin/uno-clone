@@ -37,7 +37,9 @@ fun CardImage(card: String, hidden: Boolean, cardDeckPosition: CardDeckPosition,
         modifier = Modifier.clickable(onClick = onClick).size(90.dp).aspectRatio(0.66f).graphicsLayer(
             scaleX = scale, scaleY = scale
         ).rotateCard(cardDeckPosition).pointerHoverIcon(
-            if (cardDeckPosition == CardDeckPosition.BOTTOM) loadCursorIcon("assets/Cursors/Hand.png") else loadCursorIcon("assets/Cursors/Default.png")
+            if (cardDeckPosition == CardDeckPosition.BOTTOM) loadCursorIcon("assets/Cursors/Hand.png") else loadCursorIcon(
+                "assets/Cursors/Default.png"
+            )
         ).onPointerEvent(PointerEventType.Enter) {
             if (cardDeckPosition == CardDeckPosition.BOTTOM) isHovered = true
         }.onPointerEvent(PointerEventType.Exit) {

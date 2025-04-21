@@ -8,10 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import model.Card
 import model.Player
 
 @Composable
-fun PlayerDeck(player: Player, cardDeckPosition: CardDeckPosition, hidden: Boolean = false) {
+fun PlayerDeck(
+    player: Player, cardDeckPosition: CardDeckPosition, hidden: Boolean = false, onCardPlayed: (Card) -> Unit = {}
+) {
     val isHorizontal = cardDeckPosition == CardDeckPosition.TOP || cardDeckPosition == CardDeckPosition.BOTTOM
 
     val modifier = when (cardDeckPosition) {
@@ -32,6 +35,7 @@ fun PlayerDeck(player: Player, cardDeckPosition: CardDeckPosition, hidden: Boole
                 items(player.hand) { card ->
                     CardImage(card, hidden, cardDeckPosition) {
                         player.removeCard(card)
+                        onCardPlayed(Card(card, (-10..10).random().toFloat()))
                     }
                     CardSpacer(cardDeckPosition)
                 }
@@ -41,6 +45,7 @@ fun PlayerDeck(player: Player, cardDeckPosition: CardDeckPosition, hidden: Boole
                 items(player.hand) { card ->
                     CardImage(card, hidden, cardDeckPosition) {
                         player.removeCard(card)
+                        onCardPlayed(Card(card, (-10..10).random().toFloat()))
                     }
                     CardSpacer(cardDeckPosition)
                 }
