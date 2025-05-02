@@ -13,4 +13,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "card-games"
+rootProject.name = "uno"

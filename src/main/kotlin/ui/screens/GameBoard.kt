@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package presentation.gameboard
+package ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -14,13 +14,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import model.Card
 import model.Player
-import presentation.components.card.CardDeckPosition
-import presentation.components.card.PlayerDeck
+import ui.components.card.CardDeckPosition
+import ui.components.player.PlayerDeck
 
 
 @Composable
 fun GameBoard(
-    players: List<Player?>, discardPile: List<Card>, onCardPlayed: (Card) -> Unit
+    players: List<Player?>, stack: List<Card>, onCardPlayed: (Card) -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
@@ -40,7 +40,7 @@ fun GameBoard(
         Box(
             modifier = Modifier.align(Alignment.Center)
         ) {
-            discardPile.forEachIndexed { index, card ->
+            stack.takeLast(5).forEachIndexed { index, card ->
                 Image(
                     painter = painterResource("assets/Uno/individual/${card.imagePath}"),
                     contentDescription = "Card ${card.imagePath}",

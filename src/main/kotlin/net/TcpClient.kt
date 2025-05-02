@@ -14,12 +14,13 @@ import model.toPlayer
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.io.PrintWriter
 import java.net.Socket
 
 class TcpClient(
     private val host: String,
     private val port: Int,
-    var receivedTopDiscard: SnapshotStateList<Card?>,
+    val receivedStack: SnapshotStateList<Card?>,
     val receivedPlayers: SnapshotStateList<Player?>
 ) {
     private val gson = Gson()
@@ -37,13 +38,13 @@ class TcpClient(
                 while (reader.readLine().also { line = it } != null) {
                     val message = line!!
                     when {
-                        message.startsWith("TOP DISCARD:") -> {
-                            val jsonPart = message.removePrefix("TOP DISCARD:")
-                            val type = object : TypeToken<Card?>() {}.type
-                            val topDiscard: Card? = gson.fromJson(jsonPart, type)
+                        message.startsWith("STACK:") -> {
+                            val jsonPart = message.removePrefix("STACK:")
+                            val type = object : TypeToken<List<Card?>>() {}.type
+                            val stack: List<Card?> = gson.fromJson(jsonPart, type)
                             withContext(Dispatchers.Main) {
-                                receivedTopDiscard.clear()
-                                receivedTopDiscard.add(topDiscard)
+                                receivedStack.clear()
+                                receivedStack.addAll(stack)
                             }
                         }
 
@@ -58,6 +59,17 @@ class TcpClient(
                         }
                     }
                 }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun sendMessage(message: String) {
+        socket?.let { socket ->
+            try {
+                val writer = PrintWriter(socket.getOutputStream(), true)
+                writer.println(message)
             } catch (e: IOException) {
                 e.printStackTrace()
             }

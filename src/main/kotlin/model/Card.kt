@@ -1,6 +1,6 @@
 package model
 
-import presentation.components.card.UNO_DECK
+import ui.components.card.UNO_DECK
 
 data class Card(val imagePath: String, val rotation: Float) {
     companion object {

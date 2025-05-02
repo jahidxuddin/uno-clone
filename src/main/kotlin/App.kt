@@ -1,5 +1,3 @@
-package presentation
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,27 +15,32 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
-import net.TcpViewModel
-import presentation.gameboard.GameBoard
-import presentation.menu.Menu
+import ui.screens.GameBoard
+import ui.screens.Menu
+import state.GameState
+import state.NetState
 import util.bindState
 import util.loadCursorIcon
 import kotlin.system.exitProcess
 
 @Composable
-fun App(tcpViewModel: TcpViewModel = remember { TcpViewModel() }) {
-    val appState = remember { AppState(tcpViewModel) }
+fun App(netState: NetState = remember { NetState() }) {
+    val gameState = remember { GameState(netState) }
 
-    LaunchedEffect(appState.selection) {
-        appState.handleSelection()
+    LaunchedEffect(gameState.selection) {
+        when {
+            gameState.selection == "START" -> gameState.handleGameStart()
+            gameState.selection.startsWith("JOIN") -> gameState.handleGameJoin()
+        }
     }
 
-    LaunchedEffect(tcpViewModel.connectedClients.toList()) {
-        appState.updateConnectedClients()
+    LaunchedEffect(netState.connectedClients.toList()) {
+        gameState.sendCurrentStack()
+        gameState.handlePlayerJoin()
     }
 
-    LaunchedEffect(tcpViewModel.receivedTopDiscard.toList(), tcpViewModel.receivedPlayers.toList()) {
-        appState.updateReceivedData()
+    LaunchedEffect(netState.receivedStack.toList(), netState.receivedPlayers.toList()) {
+        gameState.handleReceivedData()
     }
 
     val windowState = rememberWindowState(
@@ -47,20 +50,17 @@ fun App(tcpViewModel: TcpViewModel = remember { TcpViewModel() }) {
     )
 
     Window(
-        onCloseRequest = { exitProcess(0) },
-        title = "UNO",
-        state = windowState,
-        resizable = false,
-        undecorated = true
+        onCloseRequest = { exitProcess(0) }, title = "UNO", state = windowState, resizable = false, undecorated = true
     ) {
         MaterialTheme {
             Box(
                 modifier = Modifier.fillMaxSize().background(Color(0xFF113540))
                     .pointerHoverIcon(loadCursorIcon("assets/Cursors/Default.png")), contentAlignment = Alignment.Center
             ) {
-                Menu(bindState({ appState.selection }, { appState.selection = it }))
-                GameBoard(appState.players, appState.discardPile.value) { card ->
-                    appState.addCardToDiscardPile(card)
+                Menu(bindState({ gameState.selection }, { gameState.selection = it }))
+                GameBoard(gameState.players, gameState.stack.value) { card ->
+                    gameState.discardCards(card)
+                    gameState.syncGameState()
                 }
             }
         }

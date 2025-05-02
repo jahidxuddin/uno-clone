@@ -3,7 +3,7 @@ package model
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import presentation.components.card.UNO_DECK
+import ui.components.card.UNO_DECK
 
 data class Player(
     val id: Int, val ip: String = "localhost", private val initialHand: List<String>? = takeCards()
@@ -16,7 +16,10 @@ data class Player(
         }
 
     fun removeCard(card: String) {
-        hand = hand.filter { it != card }
+        val index = hand.indexOf(card)
+        if (index != -1) {
+            hand = hand.subList(0, index) + hand.subList(index + 1, hand.size)
+        }
     }
 
     fun addCard(card: String) {

@@ -1,4 +1,4 @@
-package presentation.components.card
+package ui.components.card
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height

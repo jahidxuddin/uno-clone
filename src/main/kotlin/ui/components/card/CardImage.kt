@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package presentation.components.card
+package ui.components.card
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
