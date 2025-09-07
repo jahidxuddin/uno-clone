@@ -79,6 +79,28 @@ class GameState(
         updatePlayers(receivedPlayers)
     }
 
+    fun checkForSameColor(card: Card): Boolean {
+        val topDiscard = stack.value.lastOrNull() ?: return false
+
+        when {
+            topDiscard.imagePath.contains("blue") && card.imagePath.contains("blue") -> return true
+            topDiscard.imagePath.contains("red") && card.imagePath.contains("red") -> return true
+            topDiscard.imagePath.contains("yellow") && card.imagePath.contains("yellow") -> return true
+        }
+
+        return false
+    }
+
+    fun checkForSameNumber(card: Card): Boolean {
+        val topDiscard = stack.value.lastOrNull() ?: return false
+        val numberRegex = Regex("""(\d+)(?=_)""") // sucht nach Zahl vor einem "_"
+
+        val topNumber = numberRegex.find(topDiscard.imagePath)?.value
+        val cardNumber = numberRegex.find(card.imagePath)?.value
+
+        return topNumber != null && topNumber == cardNumber
+    }
+
     private fun updatePlayers(receivedPlayers: List<Player>) {
         val currentPlayer = receivedPlayers.firstOrNull { it.ip == netState.getIp() }
         val otherPlayers = receivedPlayers.filter { it.id != currentPlayer?.id }.sortedBy { it.id }

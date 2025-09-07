@@ -16,7 +16,7 @@ import ui.components.card.CardSpacer
 
 @Composable
 fun PlayerDeck(
-    player: Player, cardDeckPosition: CardDeckPosition, hidden: Boolean = false, onCardPlayed: (Card) -> Unit = {}
+    player: Player, cardDeckPosition: CardDeckPosition, hidden: Boolean = false, onCardPlayed: (Card) -> Boolean = { false },
 ) {
     val isHorizontal = cardDeckPosition == CardDeckPosition.TOP || cardDeckPosition == CardDeckPosition.BOTTOM
 
@@ -37,8 +37,9 @@ fun PlayerDeck(
             LazyRow {
                 items(player.hand) { card ->
                     CardImage(card, hidden, cardDeckPosition) {
-                        player.removeCard(card)
-                        onCardPlayed(Card(card, (-10..10).random().toFloat()))
+                        if (onCardPlayed(Card(card, (-10..10).random().toFloat()))) {
+                            player.removeCard(card)
+                        }
                     }
                     CardSpacer(cardDeckPosition)
                 }
@@ -47,8 +48,9 @@ fun PlayerDeck(
             LazyColumn {
                 items(player.hand) { card ->
                     CardImage(card, hidden, cardDeckPosition) {
-                        player.removeCard(card)
-                        onCardPlayed(Card(card, (-10..10).random().toFloat()))
+                        if (onCardPlayed(Card(card, (-10..10).random().toFloat()))) {
+                            player.removeCard(card)
+                        }
                     }
                     CardSpacer(cardDeckPosition)
                 }

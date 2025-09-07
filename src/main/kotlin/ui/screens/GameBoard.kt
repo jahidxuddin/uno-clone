@@ -20,7 +20,7 @@ import ui.components.player.PlayerDeck
 
 @Composable
 fun GameBoard(
-    players: List<Player?>, stack: List<Card>, onCardPlayed: (Card) -> Unit
+    players: List<Player?>, stack: List<Card>, onCardPlayed: (Card) -> Boolean
 ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(

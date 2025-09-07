@@ -59,8 +59,12 @@ fun App(netState: NetState = remember { NetState() }) {
             ) {
                 Menu(gameState.showMenu, bindState({ gameState.selection }, { gameState.selection = it }))
                 GameBoard(gameState.players, gameState.stack.value) { card ->
-                    gameState.discardCards(card)
-                    gameState.syncGameState()
+                    if (gameState.checkForSameColor(card) || gameState.checkForSameNumber(card)) {
+                        gameState.discardCards(card)
+                        gameState.syncGameState()
+                        return@GameBoard true
+                    }
+                    return@GameBoard false
                 }
             }
         }
