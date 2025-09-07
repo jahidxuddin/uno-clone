@@ -12,9 +12,18 @@ class GameState(
     private val netState: NetState
 ) {
     val showMenu = mutableStateOf(true)
+    val showColorPicker = mutableStateOf(false)
+    var wildColor by mutableStateOf<String?>(null)
+        private set
     var selection by mutableStateOf("")
     val stack = mutableStateOf(ArrayDeque<Card>())
     val players = mutableStateListOf<Player?>(null, null, null, null)
+
+    fun chooseWildColor(color: String) {
+        wildColor = color.lowercase()
+        println("Wild color set to: $wildColor")
+        syncGameState()
+    }
 
     fun handleGameStart() {
         Card.takeTopDiscard().let {
@@ -82,23 +91,34 @@ class GameState(
     fun checkForSameColor(card: Card): Boolean {
         val topDiscard = stack.value.lastOrNull() ?: return false
 
+
         when {
             topDiscard.imagePath.contains("blue") && card.imagePath.contains("blue") -> return true
             topDiscard.imagePath.contains("red") && card.imagePath.contains("red") -> return true
             topDiscard.imagePath.contains("yellow") && card.imagePath.contains("yellow") -> return true
         }
 
-        return false
+        return checkForWildCardOnStack()
     }
 
     fun checkForSameNumber(card: Card): Boolean {
         val topDiscard = stack.value.lastOrNull() ?: return false
-        val numberRegex = Regex("""(\d+)(?=_)""") // sucht nach Zahl vor einem "_"
+        val numberRegex = Regex("""(\d+)(?=_)""") // searches for a number before a "_"
 
         val topNumber = numberRegex.find(topDiscard.imagePath)?.value
         val cardNumber = numberRegex.find(card.imagePath)?.value
 
         return topNumber != null && topNumber == cardNumber
+    }
+
+    fun checkForWildCard(card: Card): Boolean {
+        return card.imagePath.startsWith("wild/")
+    }
+
+    private fun checkForWildCardOnStack(): Boolean {
+        val topDiscard = stack.value.lastOrNull() ?: return false
+
+        return topDiscard.imagePath.startsWith("wild/")
     }
 
     private fun updatePlayers(receivedPlayers: List<Player>) {
