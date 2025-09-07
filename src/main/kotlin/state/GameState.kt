@@ -11,12 +11,13 @@ import model.toDTO
 class GameState(
     private val netState: NetState
 ) {
+    val showMenu = mutableStateOf(true)
     var selection by mutableStateOf("")
     val stack = mutableStateOf(ArrayDeque<Card>())
     val players = mutableStateListOf<Player?>(null, null, null, null)
 
     fun handleGameStart() {
-        Card.Companion.takeTopDiscard().let {
+        Card.takeTopDiscard().let {
             stack.value.addLast(it)
         }
         players[0] = Player(1)
@@ -34,13 +35,16 @@ class GameState(
 
         val ip = netState.connectedClients.lastOrNull()?.inetAddress?.hostAddress
 
-        if (players.find { it?.ip == ip } != null) return
+        val alreadyExistingPlayer = players.firstOrNull { it?.ip == ip }
+        if (alreadyExistingPlayer == null) {
+            val freeIndex = players.indexOfFirst { it == null }
 
-        val index = players.indexOfFirst { it == null }
-
-        if (ip != null && index != -1) {
-            players[index] = Player(id = index + 1, ip = ip)
-            sendCurrentPlayers()
+            if (ip != null && freeIndex != -1) {
+                players[freeIndex] = Player(id = freeIndex + 1, ip = ip)
+                sendCurrentPlayers()
+            }
+        } else {
+            netState.connectedClients.removeLast()
         }
     }
 
@@ -66,13 +70,13 @@ class GameState(
     }
 
     fun handleReceivedData() {
-        val stack = netState.receivedStack.filterNotNull()
-        val players = netState.receivedPlayers.filterNotNull()
+        val receivedStack = netState.receivedStack.filterNotNull()
+        val receivedPlayers = netState.receivedPlayers.filterNotNull()
 
-        if (stack.isNotEmpty() && players.isNotEmpty()) {
-            discardCards(*stack.toTypedArray())
-            updatePlayers(players)
-        }
+        if (receivedStack.isEmpty() || receivedPlayers.isEmpty()) return
+
+        discardCards(*receivedStack.toTypedArray())
+        updatePlayers(receivedPlayers)
     }
 
     private fun updatePlayers(receivedPlayers: List<Player>) {
@@ -86,6 +90,19 @@ class GameState(
             addAll(otherPlayers)
             while (size < 4) {
                 add(null)
+            }
+        }
+        removeNewerDuplicateByIp()
+    }
+    // NOTE: Check for host game state updating
+    private fun removeNewerDuplicateByIp() {
+        val nonNullPlayers = players.filterNotNull()
+        val groupedByIp = nonNullPlayers.groupBy { it.ip }
+
+        groupedByIp.forEach { (_, group) ->
+            if (group.size > 1) {
+                val newest = group.maxByOrNull { it.joinedAt }
+                players.replaceAll { player -> if (player == newest) null else player }
             }
         }
     }

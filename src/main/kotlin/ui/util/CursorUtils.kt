@@ -1,4 +1,4 @@
-package util
+package ui.util
 
 import androidx.compose.ui.input.pointer.PointerIcon
 import java.awt.Point

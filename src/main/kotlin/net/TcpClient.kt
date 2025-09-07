@@ -59,8 +59,10 @@ class TcpClient(
                         }
                     }
                 }
-            } catch (e: IOException) {
-                e.printStackTrace()
+            } catch (_: IOException) {
+                socket?.close()
+            } finally {
+                socket?.close()
             }
         }
     }

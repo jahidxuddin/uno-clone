@@ -22,7 +22,7 @@ class NetState {
     var receivedPlayers = mutableStateListOf<Player?>(null, null, null, null)
 
     fun startHosting() {
-        server = TcpServer(1234, connectedClients, receivedStack, receivedPlayers)
+        server = TcpServer(54321, connectedClients, receivedStack, receivedPlayers)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 server!!.start()
@@ -33,7 +33,7 @@ class NetState {
     }
 
     fun connectToHost(host: String) {
-        client = TcpClient(host, 1234, receivedStack, receivedPlayers)
+        client = TcpClient(host, 54321, receivedStack, receivedPlayers)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 client!!.connect()

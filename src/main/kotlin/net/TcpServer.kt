@@ -26,6 +26,22 @@ class TcpServer(
     private var serverSocket: ServerSocket? = null
     private val gson = Gson()
 
+    fun start() {
+        this.serverSocket = ServerSocket(port)
+        while (true) {
+            val clientSocket = this.serverSocket!!.accept()
+            connectedClients.add(clientSocket)
+
+            CoroutineScope(Dispatchers.IO).launch {
+                handleClient(clientSocket)
+            }
+        }
+    }
+
+    fun getIp(): String? {
+        return serverSocket?.inetAddress?.hostAddress
+    }
+
     private fun broadcastToOthers(message: String, sender: Socket) {
         connectedClients.filterNotNull().filter { it != sender }.forEach { client ->
             try {
@@ -69,25 +85,12 @@ class TcpServer(
 
                 broadcastToOthers(message, clientSocket)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
+            receivedPlayers.removeIf { it?.ip == clientSocket.inetAddress.hostAddress }
+            connectedClients.remove(clientSocket)
+        } finally {
+            receivedPlayers.removeIf { it?.ip == clientSocket.inetAddress.hostAddress }
             connectedClients.remove(clientSocket)
         }
-    }
-
-    fun start() {
-        this.serverSocket = ServerSocket(port)
-        while (true) {
-            val clientSocket = this.serverSocket!!.accept()
-            connectedClients.add(clientSocket)
-
-            CoroutineScope(Dispatchers.IO).launch {
-                handleClient(clientSocket)
-            }
-        }
-    }
-
-    fun getIp(): String? {
-        return serverSocket?.inetAddress?.hostAddress
     }
 }

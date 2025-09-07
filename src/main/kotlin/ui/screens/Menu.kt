@@ -12,15 +12,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun Menu(selection: MutableState<String>) {
-    var showDialog by remember { mutableStateOf(true) }
+fun Menu(showMenu: MutableState<Boolean>, selection: MutableState<String>) {
     var joinCode by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
-        if (showDialog) {
-            Dialog(onDismissRequest = { showDialog = true }) {
+        if (showMenu.value) {
+            Dialog(onDismissRequest = { showMenu.value = true }) {
                 Surface(
                     color = Color(0xFF113540),
                     shape = MaterialTheme.shapes.medium,
@@ -36,7 +35,7 @@ fun Menu(selection: MutableState<String>) {
                             Button(
                                 onClick = {
                                     selection.value = "START"
-                                    showDialog = false
+                                    showMenu.value = false
                                 },
                                 modifier = Modifier.weight(1f).pointerHoverIcon(PointerIcon.Hand),
                                 colors = ButtonDefaults.buttonColors(
@@ -49,7 +48,8 @@ fun Menu(selection: MutableState<String>) {
                                 onClick = {
                                     if (joinCode.isNotEmpty()) {
                                         selection.value = "JOIN $joinCode"
-                                        showDialog = false
+                                        showMenu.value = false
+                                        joinCode = ""
                                     }
                                 },
                                 modifier = Modifier.weight(1f).pointerHoverIcon(PointerIcon.Hand),

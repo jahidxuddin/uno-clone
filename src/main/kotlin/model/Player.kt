@@ -4,9 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import ui.components.card.UNO_DECK
+import java.time.LocalDate
 
 data class Player(
-    val id: Int, val ip: String = "localhost", private val initialHand: List<String>? = takeCards()
+    val id: Int,
+    val ip: String = "localhost",
+    private val initialHand: List<String>? = takeCards(),
+    val joinedAt: LocalDate = LocalDate.now()
 ) {
     private var _hand by mutableStateOf(initialHand)
     var hand: List<String>
@@ -36,5 +40,5 @@ data class Player(
 }
 
 fun Player.toDTO() = PlayerDTO(
-    id = id, ip = ip, hand = hand
+    id = id, ip = ip, hand = hand, joinedAt = joinedAt.toString()
 )

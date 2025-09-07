@@ -15,12 +15,12 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
-import ui.screens.GameBoard
-import ui.screens.Menu
 import state.GameState
 import state.NetState
-import util.bindState
-import util.loadCursorIcon
+import ui.screens.GameBoard
+import ui.screens.Menu
+import state.util.bindState
+import ui.util.loadCursorIcon
 import kotlin.system.exitProcess
 
 @Composable
@@ -35,8 +35,8 @@ fun App(netState: NetState = remember { NetState() }) {
     }
 
     LaunchedEffect(netState.connectedClients.toList()) {
-        gameState.sendCurrentStack()
         gameState.handlePlayerJoin()
+        gameState.sendCurrentStack()
     }
 
     LaunchedEffect(netState.receivedStack.toList(), netState.receivedPlayers.toList()) {
@@ -57,7 +57,7 @@ fun App(netState: NetState = remember { NetState() }) {
                 modifier = Modifier.fillMaxSize().background(Color(0xFF113540))
                     .pointerHoverIcon(loadCursorIcon("assets/Cursors/Default.png")), contentAlignment = Alignment.Center
             ) {
-                Menu(bindState({ gameState.selection }, { gameState.selection = it }))
+                Menu(gameState.showMenu, bindState({ gameState.selection }, { gameState.selection = it }))
                 GameBoard(gameState.players, gameState.stack.value) { card ->
                     gameState.discardCards(card)
                     gameState.syncGameState()

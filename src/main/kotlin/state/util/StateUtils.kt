@@ -1,4 +1,4 @@
-package util
+package state.util
 
 import androidx.compose.runtime.MutableState
 
