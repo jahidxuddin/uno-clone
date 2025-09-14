@@ -90,8 +90,7 @@ class GameState(
 
     fun checkForSameColor(card: Card): Boolean {
         val topDiscard = stack.value.lastOrNull() ?: return false
-
-
+        
         when {
             topDiscard.imagePath.contains("blue") && card.imagePath.contains("blue") -> return true
             topDiscard.imagePath.contains("red") && card.imagePath.contains("red") -> return true
