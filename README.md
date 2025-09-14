@@ -1,4 +1,6 @@
-# UNO
+# UNO-Clone
+
+<img src="media/preview.png"  alt="preview"/>
 
 ## Todo's
 - [❎] Switch back to the menu if the ip of the player is already in the game
